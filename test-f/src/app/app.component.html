@@ -1,0 +1,22 @@
+<div class="d-flex justify-content-around mt-5">
+  <label class="btn btn-dark cursor-pointer	text-center w-25" (change)="onFileSelected($event)">
+    <i class="fas fa-images"></i> Add Image<input type="file"class="form-control d-none"></label>
+  <button class="btn btn-danger cursor-pointer	text-center w-25" (click)="add()">
+    <i class="fas fa-images"></i> Add Product</button>
+</div>
+<small *ngIf="error">{{error}}</small>
+
+<!--  <div class="d-flex">-->
+    <div class="row mx-auto">
+      <div class="mt-5 col-3" *ngFor="let product of products">
+        <div class="card" style="width: 27rem;">
+          <img [src]="product?.image" class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">Card title</h5>
+            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+            <a href="#" class="btn btn-primary" (click)="delete(product.id)">Delete</a>
+          </div>
+        </div>
+      </div>
+    </div>
+<!--  </div>-->
