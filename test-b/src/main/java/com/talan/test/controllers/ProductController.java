@@ -43,9 +43,14 @@ public class ProductController {
         return Files.readAllBytes(Paths.get(System.getProperty("user.home") + "/images/" + image));
     }
 
-    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Flux<ProductDto> getProduct() {
+    @GetMapping(path = "/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<ProductDto> getStream() {
         return Flux.zip(Flux.interval(Duration.ofMillis(1000)), productService.findAllProducts()).map(Tuple2::getT2).share();
+    }
+
+    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    Flux<ProductDto> getProducts() {
+        return productService.findAllProducts();
     }
 
     @DeleteMapping("{id}")
