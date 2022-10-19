@@ -1,12 +1,7 @@
 package com.talan.test;
 
-import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.springframework.mock.web.MockMultipartFile;
-import com.talan.test.repositories.ProductRepo;
-import com.talan.test.services.ProductService;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
