@@ -1,23 +1,20 @@
 package com.talan.test.services.impl;
 
-import com.talan.test.dto.ProductDto;
 import com.talan.test.entity.Product;
 import com.talan.test.repositories.ProductRepo;
 import com.talan.test.services.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
-import static java.nio.file.Files.createDirectories;
-import static java.nio.file.Files.exists;
+import static java.nio.file.Files.*;
 import static java.nio.file.Paths.get;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.apache.http.entity.ContentType.*;
 
 @RequiredArgsConstructor
@@ -28,54 +25,51 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepo productRepo;
 
     @Override
-    public Mono<Product> save(String name, double price, Mono<FilePart> file) throws IOException {
-        Product product = new Product();
-        return file.switchIfEmpty(Mono.error(() -> new IllegalStateException("Cannot upload empty file"))).then(file.flatMap(filePart -> {
-            if (!Arrays.asList(
-                    IMAGE_JPEG.getMimeType(),
-                    IMAGE_PNG.getMimeType(),
-                    IMAGE_GIF.getMimeType()).contains(String.valueOf(filePart.headers().getContentType()))) {
-                return Mono.error(new IllegalStateException("File must be an image [" + filePart.headers().getContentType() + "]"));
-            }
-            return Mono.just("Ok");
-        })).then(file.flatMap(data -> {
-            if (!exists(DIRECTORY)) {
-                try {
-                    createDirectories(DIRECTORY);
-                } catch (IOException e) {
-                    return Mono.error(new RuntimeException(e));
-                }
-            }
-            product.setName(name);
-            product.setPrice(price);
-            product.setImage(data.filename());
-            return data.transferTo(DIRECTORY.resolve(data.filename()));
-        }).then(productRepo.save(product)));
-    }
+    public Product save(String name, double price, MultipartFile file) throws IOException {
+        // 1. Check if image is not empty
+        isFileEmpty(file);
+        // 2. If file is an image
+        isImage(file);
 
-    @Override
-    public Mono<ProductDto> findById(Long id) {
-        return productRepo.findById(id).map(product -> ProductDto.builder()
-                .id(product.getId())
-                .productName(product.getName())
-                .image(UriComponentsBuilder.newInstance().scheme("http").host("localhost").port(8080).path("api/products/images/" + product.getImage()).toUriString())
-                .price(product.getPrice())
+        if (!exists(DIRECTORY)) createDirectories(DIRECTORY);
+        String filename = String.format("%s", file.getOriginalFilename());
+        Path fileStorage = get(String.valueOf(DIRECTORY), filename).toAbsolutePath().normalize();
+        copy(file.getInputStream(), fileStorage, REPLACE_EXISTING);
+
+        return productRepo.save(Product.builder()
+                .name(name)
+                .price(price)
+                .image(file.getOriginalFilename())
                 .build());
     }
 
-    @Override
-    public Flux<ProductDto> findAllProducts() {
-        return productRepo.findAll().map(product -> ProductDto.builder()
-                .id(product.getId())
-                .productName(product.getName())
-                .image(UriComponentsBuilder.newInstance().scheme("http").host("localhost").port(8080).path("api/products/images/" + product.getImage()).toUriString())
-                .price(product.getPrice())
-                .build()
-        ).onErrorStop();
+    private void isImage(MultipartFile file) {
+        if (!Arrays.asList(
+                IMAGE_JPEG.getMimeType(),
+                IMAGE_PNG.getMimeType(),
+                IMAGE_GIF.getMimeType()).contains(file.getContentType())) {
+            throw new IllegalStateException("File must be an image [" + file.getContentType() + "]");
+        }
+    }
+
+    private void isFileEmpty(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalStateException("Cannot upload empty file [" + file.getSize() + "]");
+        }
     }
 
     @Override
-    public Mono<Void> delete(Long id) {
-        return productRepo.deleteById(id);
+    public Product findById(Long id) {
+        return productRepo.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<Product> findAllProducts() {
+        return productRepo.findAll();
+    }
+
+    @Override
+    public void delete(Long id) {
+        productRepo.deleteById(id);
     }
 }

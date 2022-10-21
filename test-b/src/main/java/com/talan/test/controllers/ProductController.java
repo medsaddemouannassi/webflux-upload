@@ -1,20 +1,15 @@
 package com.talan.test.controllers;
 
-import com.talan.test.dto.ProductDto;
 import com.talan.test.entity.Product;
 import com.talan.test.services.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Duration;
+import java.util.List;
 
 import static org.springframework.http.MediaType.*;
 
@@ -23,18 +18,19 @@ import static org.springframework.http.MediaType.*;
 @RequiredArgsConstructor
 @CrossOrigin
 public class ProductController {
+
     private final ProductService productService;
 
     @PostMapping
-    Mono<Product> save(@RequestPart String name,
-                       @RequestPart String price,
-                       @RequestPart Mono<FilePart> image
+    Product save(@RequestParam String name,
+                 @RequestParam String price,
+                 @RequestParam MultipartFile image
     ) throws IOException {
         return productService.save(name, Double.parseDouble(price), image);
     }
 
     @GetMapping("{id}")
-    Mono<ProductDto> getProductById(@PathVariable Long id) {
+    Product getProductById(@PathVariable Long id) {
         return productService.findById(id);
     }
 
@@ -43,18 +39,13 @@ public class ProductController {
         return Files.readAllBytes(Paths.get(System.getProperty("user.home") + "/images/" + image));
     }
 
-    @GetMapping(path = "/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Flux<ProductDto> getStream() {
-        return Flux.zip(Flux.interval(Duration.ofMillis(1000)), productService.findAllProducts()).map(Tuple2::getT2).share();
-    }
-
-    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    Flux<ProductDto> getProducts() {
+    @GetMapping
+    List<Product> getProducts() {
         return productService.findAllProducts();
     }
 
     @DeleteMapping("{id}")
-    Mono<Void> deleteProduct(@PathVariable Long id) {
-        return productService.delete(id);
+    void deleteProduct(@PathVariable Long id) {
+        productService.delete(id);
     }
 }
