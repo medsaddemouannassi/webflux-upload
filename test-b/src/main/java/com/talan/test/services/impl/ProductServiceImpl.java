@@ -6,11 +6,13 @@ import com.talan.test.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.nio.file.Files.*;
 import static java.nio.file.Paths.get;
@@ -65,7 +67,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> findAllProducts() {
-        return productRepo.findAll();
+        final List<Product> all = productRepo.findAll();
+        all.forEach(product -> product.setImage(UriComponentsBuilder.newInstance().scheme("http").host("localhost").port(8080).path("api/products/images/" + product.getImage()).toUriString()));
+        return all;
     }
 
     @Override
