@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
       };
       sse.onerror = () => sse.close()
     }).subscribe(data => {
+      console.log(data)
       this.products = [...this.products, data];
     })
 
