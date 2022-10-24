@@ -13,10 +13,10 @@
 <small *ngIf="error">{{error}}</small>
 
 <div class="row mx-auto">
-  <div class="mt-5 col-l-3 col-md-6" *ngFor="let product of products">
+  <div class="mt-5 col-md-3" *ngFor="let product of products">
     <div class="card" style="width: 27rem;">
       <img [src]="product?.image" class="card-img-top" alt="...">
-      <div class="card-body">
+      <div class="card-body d-flex justify-content-between align-items-center">
         <h5 class="card-title">{{product?.productName}}</h5>
         <h6 class="card-text">Price : {{product?.price}} $</h6>
         <a href="#" class="btn btn-primary" (click)="delete(product.id)">Delete</a>
