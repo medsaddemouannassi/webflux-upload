@@ -20,7 +20,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.products = [];
-    this.getStreamOfProducts();
+    this.getSyncProducts();
   }
 
 
@@ -54,6 +54,13 @@ export class AppComponent implements OnInit {
 
   }
 
+  getSyncProducts(){
+    return this.http.get<any>(`${this.url}/products`).subscribe(data => {
+      console.log(data)
+      this.products = data
+    })
+  }
+
   onFileSelected(any: any) {
     this.selectedFile = any.target.files[0];
     // @ts-ignore
@@ -83,7 +90,7 @@ export class AppComponent implements OnInit {
       formData.append('price', document.getElementById('price').value)
       formData.append('image', this.selectedFile)
       this.http.post<any>(`${this.url}/products`, formData).subscribe(() => {
-        this.getProducts();
+        this.getSyncProducts();
       })
     }
   }
@@ -91,7 +98,7 @@ export class AppComponent implements OnInit {
   delete(id: number) {
     this.products = [];
     this.http.delete<any>(`${this.url}/products/${id}`).subscribe(() => {
-      this.getProducts();
+      this.getSyncProducts();
     })
   }
 }
